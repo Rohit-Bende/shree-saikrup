@@ -1,0 +1,818 @@
+from flask import Flask, render_template_string
+
+app = Flask(__name__)
+
+# The complete HTML content of your restaurant website
+# All images for menu and combos are included here.
+# The logo is the text "Shree Saikrupa Restaurant".
+HTML_CONTENT = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shree Saikrupa Restaurant - Order Online</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #A0522D; /* Sienna - Warm food color */
+            --secondary-color: #F5DEB3; /* Wheat - Light background */
+            --text-color: #333;
+            --light-text-color: #666;
+            --white: #fff;
+            --dark-green: #228B22; /* Forest Green - for fresh veggies */
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--white);
+            text-decoration: none;
+        }
+
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        nav ul li {
+            margin-left: 25px;
+        }
+
+        nav ul li a {
+            color: var(--white);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        nav ul li a:hover {
+            color: var(--secondary-color);
+        }
+
+        .header-contact {
+            text-align: right;
+        }
+
+        .header-contact span {
+            display: block;
+            font-size: 0.9em;
+            margin-bottom: 3px;
+        }
+
+        .header-contact a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1600&q=80') no-repeat center center/cover;
+            color: var(--white);
+            text-align: center;
+            padding: 100px 20px;
+            margin-bottom: 40px;
+        }
+
+        .hero h1 {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+
+        .hero p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background-color: var(--dark-green);
+            color: var(--white);
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background-color: #3CB371; /* Medium Sea Green */
+            transform: translateY(-2px);
+        }
+
+        /* Section Styling */
+        section {
+            padding: 40px 0;
+            margin-bottom: 20px;
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        section h2 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: var(--primary-color);
+            position: relative;
+        }
+
+        section h2::after {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 4px;
+            background-color: var(--primary-color);
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: -10px;
+            border-radius: 2px;
+        }
+
+        /* About Us */
+        .about-us-content {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            padding: 0 40px;
+        }
+
+        .about-us-content img {
+            max-width: 40%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .about-us-text {
+            flex: 1;
+        }
+
+        .about-us-text p {
+            font-size: 1.1em;
+            color: var(--light-text-color);
+            margin-bottom: 15px;
+        }
+
+        /* Menu Section */
+        .menu-categories {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            gap: 15px;
+        }
+
+        .menu-category-btn {
+            background-color: var(--secondary-color);
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .menu-category-btn.active,
+        .menu-category-btn:hover {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 0 20px;
+        }
+
+        .menu-item {
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .menu-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .item-details {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .item-details h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            font-size: 1.4em;
+        }
+
+        .item-details p.description {
+            font-size: 0.9em;
+            color: var(--light-text-color);
+            margin-bottom: 15px;
+        }
+
+        .price-options {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        .price-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .price-option span:first-child {
+            color: var(--dark-green);
+        }
+
+        .price-option span:last-child {
+            color: var(--primary-color);
+        }
+
+        .add-to-cart-btn {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            text-align: center;
+        }
+
+        .add-to-cart-btn:hover {
+            background-color: #8B4513; /* Saddle Brown */
+        }
+
+        /* Combo Section */
+        .combo-card {
+            background-color: var(--secondary-color);
+            border: 1px dashed var(--primary-color);
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .combo-card h3 {
+            color: var(--dark-green);
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .combo-card p {
+            font-size: 1.1em;
+            color: var(--text-color);
+            margin-bottom: 15px;
+        }
+
+        .combo-card ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 20px;
+            text-align: left;
+            display: inline-block; /* To center the list */
+        }
+
+        .combo-card ul li {
+            margin-bottom: 8px;
+            font-size: 1em;
+            color: var(--light-text-color);
+        }
+
+        /* Adding image specifically for combo cards */
+        .combo-card .combo-img {
+            max-width: 100%;
+            height: 150px; /* Fixed height for consistency */
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+
+        /* Order Online Section */
+        .order-online-options {
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .order-online-options p {
+            font-size: 1.1em;
+            margin-bottom: 25px;
+        }
+
+        .delivery-partners {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .delivery-partner a {
+            text-decoration: none;
+            display: block;
+            background-color: var(--white);
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 150px; /* Fixed width for better alignment */
+            text-align: center;
+        }
+
+        .delivery-partner a:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .delivery-partner img {
+            max-width: 100px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .delivery-partner span {
+            font-weight: 700;
+            color: var(--text-color);
+            font-size: 1.1em;
+        }
+
+        /* Contact Section */
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .contact-item {
+            background-color: var(--secondary-color);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .contact-item i {
+            font-size: 1.8em;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .contact-item h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .contact-item p, .contact-item a {
+            font-size: 1.1em;
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        .contact-item a:hover {
+            text-decoration: underline;
+        }
+
+        .map-container {
+            width: 100%;
+            max-width: 800px;
+            height: 400px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+
+        .map-container iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--primary-color);
+            color: var(--white);
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+
+        .footer-content p {
+            margin: 0;
+            font-size: 0.9em;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            nav ul {
+                margin-top: 15px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            nav ul li {
+                margin: 0 10px 10px 10px;
+            }
+            .hero h1 {
+                font-size: 2.5em;
+            }
+            .hero p {
+                font-size: 1em;
+            }
+            .about-us-content {
+                flex-direction: column;
+                padding: 0 20px;
+            }
+            .about-us-content img {
+                max-width: 80%;
+            }
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+            .delivery-partners {
+                flex-direction: column;
+                align-items: center;
+            }
+            .delivery-partner a {
+                width: 80%;
+                max-width: 250px;
+            }
+            .contact-info {
+                padding: 0 10px;
+            }
+            .contact-item {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-content container">
+            <a href="#" class="logo">Shree Saikrupa Restaurant</a>
+            <nav>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#menu">Menu</a></li>
+                    <li><a href="#combos">Combos</a></li>
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="header-contact">
+                <span>Call Us:</span>
+                <a href="tel:7276803030">727 680 3030</a> | <a href="tel:9156537070">915 653 7070</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <h1>Experience Culinary Excellence</h1>
+            <p>Freshly Prepared, Quality Guaranteed. Delight in every bite!</p>
+            <a href="#order-online" class="btn">Order Online Now</a>
+        </section>
+
+        <section id="about" class="container">
+            <h2>About Shree Saikrupa</h2>
+            <div class="about-us-content">
+                <img src="https://images.unsplash.com/photo-1620242137021-c4d3701a9319?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Our Kitchen">
+                <div class="about-us-text">
+                    <p>At Shree Saikrupa, we are passionate about serving you the finest quality food, cooked to perfection with premium refined oil. We pride ourselves on using only the freshest vegetables and ingredients daily, ensuring every dish is not just delicious but also healthy.</p>
+                    <p>Our commitment to hygiene is paramount, guaranteeing a clean and safe dining experience. We believe in "Quality in Every Bite!" and strive to live up to our motto: "We Serve the Best".</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="menu" class="container">
+            <h2>Our Delicious Menu</h2>
+
+            <div class="menu-categories">
+                <button class="menu-category-btn active" data-category="all">All Items</button>
+                <button class="menu-category-btn" data-category="non-veg">Non-Veg</button>
+                <button class="menu-category-btn" data-category="veg">Vegetarian</button>
+                <button class="menu-category-btn" data-category="biryani">Biryani & Rice</button>
+                <button class="menu-category-btn" data-category="chinese">Chinese</button>
+                <button class="menu-category-btn" data-category="starters">Soups & Starters</button>
+                <button class="menu-category-btn" data-category="breads">Tandoor & Breads</button>
+            </div>
+
+            <div class="menu-grid">
+                <div class="menu-item" data-category="non-veg">
+                    <img src="https://images.unsplash.com/photo-1599525420364-f6b90740a6b9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Chicken Curry">
+                    <div class="item-details">
+                        <h3>Chicken Curry</h3>
+                        <p class="description">Classic chicken curry, rich and flavorful.</p>
+                        <div class="price-options">
+                            <div class="price-option"><span>Full:</span> <span>₹300</span></div>
+                            <div class="price-option"><span>Half:</span> <span>₹180</span></div>
+                        </div>
+                        <button class="add-to-cart-btn">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="menu-item" data-category="non-veg">
+                    <img src="https://images.unsplash.com/photo-1593189914488-8b2d41b5c464?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Mutton Rogan Josh">
+                    <div class="item-details">
+                        <h3>Mutton Rogan Josh</h3>
+                        <p class="description">Aromatic Kashmiri mutton dish.</p>
+                        <div class="price-options">
+                            <div class="price-option"><span>Full:</span> <span>₹420</span></div>
+                            <div class="price-option"><span>Half:</span> <span>₹260</span></div>
+                        </div>
+                        <button class="add-to-cart-btn">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="menu-item" data-category="non-veg chinese">
+                    <img src="https://images.unsplash.com/photo-1612929633758-29472e3914a5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Chicken Fried Rice">
+                    <div class="item-details">
+                        <h3>Chicken Fried Rice</h3>
+                        <p class="description">Wok-tossed rice with tender chicken.</p>
+                        <div class="price-options">
+                            <div class="price-option"><span>Full:</span> <span>₹250</span></div>
+                            <div class="price-option"><span>Half:</span> <span>₹150</span></div>
+                        </div>
+                        <button class="add-to-cart-btn">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="menu-item" data-category="biryani non-veg">
+                    <img src="https://images.unsplash.com/photo-1626279930962-d04b61971167?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Chicken Dum Biryani">
+                    <div class="item-details">
+                        <h3>Chicken Dum Biryani</h3>
+                        <p class="description">Fragrant basmati rice with marinated chicken.</p>
+                        <div class="price-options">
+                            <div class="price-option"><span>Full:</span> <span>₹350</span></div>
+                            <div class="price-option"><span>Half:</span> <span>₹210</span></div>
+                            <div class="price-option"><span>Quarter:</span> <span>₹150</span></div>
+                        </div>
+                        <button class="add-to-cart-btn">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="menu-item" data-category="veg">
+                    <img src="https://images.unsplash.com/photo-1589302604859-6238382c2b3c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Paneer Butter Masala">
+                    <div class="item-details">
+                        <h3>Paneer Butter Masala</h3>
+                        <p class="description">Creamy paneer in a rich tomato gravy.</p>
+                        <div class="price-options">
+                            <div class="price-option"><span>Full:</span> <span>₹300</span></div>
+                            <div class="price-option"><span>Half:</span> <span>₹180</span></div>
+                        </div>
+                        <button class="add-to-cart-btn">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="menu-item" data-category="veg chinese">
+                    <img src="https://images.unsplash.com/photo-1555939593-59424707e742?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Veg Hakka Noodles">
+                    <div class="item-details">
+                        <h3>Veg Hakka Noodles</h3>
+                        <p class="description">Stir-fried noodles with fresh vegetables.</p>
+                        <div class="price-options">
+                            <div class="price-option"><span>Full:</span> <span>₹200</span></div>
+                            <div class="price-option"><span>Half:</span> <span>₹130</span></div>
+                        </div>
+                        <button class="add-to-cart-btn">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="menu-item" data-category="starters veg">
+                    <img src="https://images.unsplash.com/photo-1631557088998-38680c69d038?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Paneer Tikka">
+                    <div class="item-details">
+                        <h3>Paneer Tikka</h3>
+                        <p class="description">Marinated paneer grilled to perfection.</p>
+                        <div class="price-options">
+                            <div class="price-option"><span>Price:</span> <span>₹250</span></div>
+                        </div>
+                        <button class="add-to-cart-btn">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="menu-item" data-category="breads">
+                    <img src="https://images.unsplash.com/photo-1601614741369-02082269a840?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Butter Naan">
+                    <div class="item-details">
+                        <h3>Butter Naan</h3>
+                        <p class="description">Soft, fluffy naan brushed with butter.</p>
+                        <div class="price-options">
+                            <div class="price-option"><span>Price:</span> <span>₹70</span></div>
+                        </div>
+                        <button class="add-to-cart-btn">Add to Cart</button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="combos" class="container">
+            <h2>Special Combo Deals</h2>
+            <div class="combo-grid menu-grid">
+                <div class="combo-card">
+                    <img src="https://images.unsplash.com/photo-1627953267744-bbcc070b4a44?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Non-Veg Combo" class="combo-img">
+                    <h3>Non-Veg Combo</h3>
+                    <p>(Available 11:00 AM to 3:00 PM)</p>
+                    <ul>
+                        <li>Chicken Curry / Dry</li>
+                        <li>Dal</li>
+                        <li>2 Butter Chapati / 2 Tandoor Roti</li>
+                        <li>Plain Rice</li>
+                        <li>Gulab Jamun</li>
+                    </ul>
+                    <div class="price-option" style="justify-content: center; font-size: 1.5em; margin-bottom: 0;"><span>Price:</span> <span>₹350</span></div>
+                    <button class="add-to-cart-btn" style="margin-top: 20px;">Order Combo</button>
+                </div>
+
+                <div class="combo-card">
+                    <img src="https://images.unsplash.com/photo-1604382354930-b9a69628e7d2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80" alt="Veg Combo" class="combo-img">
+                    <h3>Veg Combo</h3>
+                    <p>(Available 11:00 AM to 3:00 PM)</p>
+                    <ul>
+                        <li>Paneer / Mix Veg Curry</li>
+                        <li>Dal</li>
+                        <li>2 Butter Chapati / 2 Tandoor Roti</li>
+                        <li>Plain Rice</li>
+                        <li>Gulab Jamun</li>
+                    </ul>
+                    <div class="price-option" style="justify-content: center; font-size: 1.5em; margin-bottom: 0;"><span>Price:</span> <span>₹250</span></div>
+                    <button class="add-to-cart-btn" style="margin-top: 20px;">Order Combo</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="order-online" class="container">
+            <h2>Order Online for Convenient Delivery</h2>
+            <div class="order-online-options">
+                <p>Choose your preferred delivery partner and get your favorite dishes delivered right to your doorstep!</p>
+                <div class="delivery-partners">
+                    <div class="delivery-partner">
+                        <a href="https://www.swiggy.com/restaurants/shree-saikrupa-restaurant-manjari-pune-801234" target="_blank">
+                            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/3/3d/Swiggy_logo.svg/300px-Swiggy_logo.svg.png" alt="Swiggy Logo">
+                            <span>Order on Swiggy</span>
+                        </a>
+                    </div>
+                    <div class="delivery-partner">
+                        <a href="https://www.zomato.com/pune/shree-saikrupa-restaurant-manjari" target="_blank">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Zomato_logo.png/300px-Zomato_logo.png" alt="Zomato Logo">
+                            <span>Order on Zomato</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="container">
+            <h2>Contact Us</h2>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <h3>Our Location</h3>
+                    <p>Shop No. 12, Ground Floor, Bhaskar Heights, Manjari Bk., Pune - 14.</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-phone-alt"></i>
+                    <h3>Call Us</h3>
+                    <p><a href="tel:7276803030">727 680 3030</a></p>
+                    <p><a href="tel:9156537070">915 653 7070</a></p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <h3>Email Us</h3>
+                    <p><a href="mailto:info@shreesaikrupa.com">info@shreesaikrupa.com</a></p>
+                </div>
+            </div>
+            <div class="map-container">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3782.308709328221!2d73.9782723!3d18.5630652!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2ef62b665c82b%3A0x7c7f3e8b4e7a8e8e!2sBhaskar%20Heights%2C%20Manjari%20Budruk%2C%20Pune%2C%20Maharashtra%20412307!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <div class="footer-content container">
+            <p>© 2025 Shree Saikrupa Restaurant. All rights reserved.</p>
+            <p>Designed with ❤️ for delicious food lovers.</p>
+        </div>
+    </footer>
+
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        // JavaScript for Menu Category Filtering
+        document.addEventListener('DOMContentLoaded', function() {
+            const categoryButtons = document.querySelectorAll('.menu-category-btn');
+            const menuItems = document.querySelectorAll('.menu-item');
+
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    categoryButtons.forEach(btn => btn.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+
+                    const selectedCategory = this.dataset.category;
+
+                    menuItems.forEach(item => {
+                        const itemCategories = item.dataset.category.split(' '); // Split categories
+                        if (selectedCategory === 'all' || itemCategories.includes(selectedCategory)) {
+                            item.style.display = 'flex'; // Show item
+                        } else {
+                            item.style.display = 'none'; // Hide item
+                        }
+                    });
+                });
+            });
+
+            // Simulate "Add to Cart" functionality (can be expanded with a real cart)
+            const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+            addToCartButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    alert('Item added to cart! (This is a demo, full cart functionality not implemented)');
+                    // In a real application, you'd add this item to a shopping cart array/object
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+"""
+
+@app.route('/')
+def home():
+    """
+    Renders the main HTML page for the Shree Saikrupa Restaurant website.
+    The HTML content is stored as a multi-line string.
+    """
+    return render_template_string(HTML_CONTENT)
+
+if __name__ == '__main__':
+    # Run the Flask application.
+    # debug=True allows for automatic reloading on code changes and provides a debugger.
+    # host='0.0.0.0' makes the server accessible from other devices on the network.
+    app.run(debug=True, host='0.0.0.0', port=5000)
